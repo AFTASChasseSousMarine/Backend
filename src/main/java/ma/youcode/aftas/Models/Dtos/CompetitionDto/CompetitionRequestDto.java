@@ -18,11 +18,11 @@ import java.util.List;
 public class CompetitionRequestDto {
     private Long id;
     private Date date;
+    private String code;
     private Time startTime;
     private Time endTime;
     private Integer numberOfParticipants;
     private String location;
     private Double amount;
-    private String code;
     private List<RankingResponseDto> rankings = new ArrayList<RankingResponseDto>();
 }
