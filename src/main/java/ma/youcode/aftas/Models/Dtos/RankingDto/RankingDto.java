@@ -4,20 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ma.youcode.aftas.Models.Dtos.CompetitionDto.CompetitionResponseDto;
-import ma.youcode.aftas.Models.Dtos.MemberDto.MemberRequestDto;
 import ma.youcode.aftas.Models.Dtos.MemberDto.MemberResponseDto;
-import ma.youcode.aftas.Models.Entities.Competition;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RankingRequestDto {
+public class RankingDto {
     private Long competitionId;
     private Long memberId;
     private Integer rank = 0;
     private Integer score = 0;
-    //todo : check if this is needed to be added member and competition objects here
-    // And I think it's not needed because we are not going to use them in the body...
+    private MemberResponseDto member;
 }

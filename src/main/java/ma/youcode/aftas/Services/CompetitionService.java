@@ -1,19 +1,16 @@
 package ma.youcode.aftas.Services;
 
+import ma.youcode.aftas.Exception.ExceptionCompetition;
 import ma.youcode.aftas.Models.Dtos.CompetitionDto.CompetitionRequestDto;
 import ma.youcode.aftas.Models.Entities.Competition;
 import ma.youcode.aftas.Repositories.CompetitionRepository;
-import org.apache.catalina.connector.Response;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
-import java.util.IllegalFormatCodePointException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,15 +18,18 @@ import java.util.stream.Collectors;
 public class CompetitionService {
     private final CompetitionRepository competitionRepository;
     private final ModelMapper modelMapper;
+
     @Autowired
     public CompetitionService(CompetitionRepository competitionRepository, ModelMapper modelMapper) {
         this.competitionRepository = competitionRepository;
         this.modelMapper = modelMapper;
     }
 
-    public List<CompetitionRequestDto> getAllCompetitions() {
-        List<Competition> competitions = competitionRepository.findAll();
-        return competitions.stream()
+    public List<CompetitionRequestDto> getAllCompetitions(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Slice<Competition> competitions = competitionRepository.findAll(pageRequest);
+        return competitions.getContent().stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -37,8 +37,10 @@ public class CompetitionService {
     private CompetitionRequestDto convertToDto(Competition competition) {
         return modelMapper.map(competition, CompetitionRequestDto.class);
     }
-    public Competition getCompetitionById(Long id) {
-        return competitionRepository.findById(id).orElse(null);
+
+    public CompetitionRequestDto getCompetitionById(Long id) {
+        Competition competition = competitionRepository.findById(id).orElse(null);
+        return convertToDto(competition);
     }
 
     public CompetitionRequestDto createCompetition(CompetitionRequestDto competitionDto) {
@@ -48,16 +50,17 @@ public class CompetitionService {
         competition.setCode(code);
 
         if (competitionRepository.existsByCode(competition.getCode())) {
-            throw new IllegalArgumentException("Competition with code '" + competition.getCode() + "' already exists.");
+            throw new ExceptionCompetition("Competition with code '" + competition.getCode() + "' already exists.");
         }
 
         if (competitionRepository.existsByDate(competitionDto.getDate())) {
-            throw new IllegalArgumentException("Already exists a competition in the same date");
+            throw new ExceptionCompetition("Already exists a competition in the same date");
         }
 
         Competition savedCompetition = competitionRepository.save(competition);
         return modelMapper.map(savedCompetition, CompetitionRequestDto.class);
     }
+
     public CompetitionRequestDto updateCompetition(CompetitionRequestDto competitionDto) {
         String code = generateCompetitionCode(competitionDto.getLocation());
         Competition competition = modelMapper.map(competitionDto, Competition.class);
@@ -65,6 +68,7 @@ public class CompetitionService {
         Competition savedCompetition = competitionRepository.save(competition);
         return modelMapper.map(savedCompetition, CompetitionRequestDto.class);
     }
+
     public void deleteById(Long id) {
         competitionRepository.deleteById(id);
     }
